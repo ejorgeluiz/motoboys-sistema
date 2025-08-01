@@ -1,0 +1,2745 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Prestação de Contas - Motoboys - Calçados 24h</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            background: #34495e;
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn:hover, .tab-btn.active {
+            background: white;
+            color: #2c3e50;
+            border-bottom-color: #3498db;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-section {
+            padding: 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .input-group.half-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-size: 13px;
+        }
+
+        input, select, textarea {
+            padding: 10px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 3px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 11px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .positive { color: #27ae60; }
+        .negative { color: #e74c3c; }
+        .info { color: #3498db; }
+        .warning { color: #f39c12; }
+
+        .preview {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+            border-left: 4px solid #3498db;
+        }
+
+        .table-container {
+            background: white;
+            margin: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .table-header {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #e1e8ed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            min-width: 1200px;
+        }
+
+        th {
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            color: white;
+            padding: 10px 6px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #e1e8ed;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        tr:hover td {
+            background-color: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .status-ok {
+            background: #27ae60;
+        }
+
+        .status-pendente {
+            background: #e74c3c;
+        }
+
+        .rota-badge {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .rota-badge.rota1 {
+            background: #f39c12;
+        }
+
+        .rota-badge.rota2 {
+            background: #9b59b6;
+        }
+
+        .rota-badge.rota3 {
+            background: #e74c3c;
+        }
+
+        .rota-badge.unica {
+            background: #1abc9c;
+        }
+
+        .rota-badge.rota-do-dia {
+            background: #34495e;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 3% auto;
+            padding: 25px;
+            border-radius: 15px;
+            width: 95%;
+            max-width: 800px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .pagamento-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .pagamento-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e1e8ed;
+        }
+
+        .pagamento-item input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .valor-pagamento {
+            margin-left: 10px;
+            width: 100px;
+        }
+
+        .search-highlight {
+            background: yellow;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            table {
+                font-size: 10px;
+                min-width: 800px;
+            }
+            
+            th, td {
+                padding: 6px 3px;
+            }
+
+            .table-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .modal-content {
+                width: 98%;
+                margin: 2% auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏍️ Controle de Prestação de Contas - Motoboys</h1>
+            <p>Sistema Completo: Pedidos + Fechamento Bling</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('pedidos')">📝 Cadastrar Pedidos</button>
+            <button class="tab-btn" onclick="showTab('fechamento')">💰 Fechamento Bling</button>
+            <button class="tab-btn" onclick="showTab('motoboys')">👥 Gerenciar Motoboys</button>
+            <button class="tab-btn" onclick="showTab('rotas')">🛣️ Resumo por Rotas</button>
+            <button class="tab-btn" onclick="showTab('relatorio')">📊 Relatórios</button>
+        </div>
+
+        <!-- ESTATÍSTICAS GERAIS -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value info" id="totalPedidos">0</div>
+                <div class="stat-label">Total Pedidos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value positive" id="totalPedidosHoje">0</div>
+                <div class="stat-label">Pedidos Hoje</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value warning" id="totalValorRota">R$ 0,00</div>
+                <div class="stat-label">Valor Total Rotas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value negative" id="totalValorFinal">R$ 0,00</div>
+                <div class="stat-label">Valor Final a Receber</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value info" id="pedidosPendentes">0</div>
+                <div class="stat-label">Pedidos Pendentes</div>
+            </div>
+        </div>
+
+        <!-- ABA 1: CADASTRAR PEDIDOS -->
+        <div id="pedidos" class="tab-content active">
+            <div class="form-section">
+                <h2>📝 Cadastro Individual de Pedidos</h2>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="motoboy">Motoboy</label>
+                        <select id="motoboy">
+                            <option value="">Selecione ou cadastre novo</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="novoMotoboy">Novo Motoboy</label>
+                        <input type="text" id="novoMotoboy" placeholder="Nome do novo motoboy">
+                    </div>
+                    <div class="input-group">
+                        <label for="telefone">Telefone</label>
+                        <input type="tel" id="telefone" placeholder="(11) 99999-9999">
+                    </div>
+                    <div class="input-group">
+                        <label for="data">Data</label>
+                        <input type="date" id="data">
+                    </div>
+                    <div class="input-group">
+                        <label for="nomeRota">🛣️ Nome da Rota</label>
+                        <select id="nomeRota" onchange="toggleRotaCustom()">
+                            <option value="">Selecione uma rota</option>
+                            <option value="1">Rota 1</option>
+                            <option value="2">Rota 2</option>
+                            <option value="3">Rota 3</option>
+                            <option value="unica">Única</option>
+                            <option value="rota-do-dia">Rota do Dia</option>
+                            <option value="custom">🖊️ Personalizada</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="rotaCustomGroup" style="display: none;">
+                        <label for="rotaCustom">Rota Personalizada</label>
+                        <input type="text" id="rotaCustom" placeholder="Digite o nome da rota">
+                    </div>
+                    <div class="input-group">
+                        <label for="numeroPedido">Nº Pedido</label>
+                        <input type="text" id="numeroPedido" placeholder="Ex: #001, PED-123">
+                    </div>
+                    <div class="input-group">
+                        <label for="statusPedido">Status</label>
+                        <select id="statusPedido">
+                            <option value="ok">✅ OK</option>
+                            <option value="pendente">⏳ Pendente</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="dinheiroRecebido">💵 Dinheiro Recebido</label>
+                        <input type="number" id="dinheiroRecebido" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="input-group">
+                        <label for="valorRota">💰 Valor da Rota</label>
+                        <input type="number" id="valorRota" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="input-group">
+                        <label for="desconto">💳 Desconto</label>
+                        <input type="number" id="desconto" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="input-group">
+                        <label for="troco">🔄 Troco</label>
+                        <input type="number" id="troco" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="input-group">
+                        <label for="dinheiroRetido">🏪 Dinheiro Retido</label>
+                        <input type="number" id="dinheiroRetido" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="input-group full-width">
+                        <label for="observacoes">📝 Observações</label>
+                        <textarea id="observacoes" placeholder="Observações sobre o pedido (opcional)"></textarea>
+                    </div>
+                </div>
+                
+                <div class="preview" id="previewCalculo">
+                    💡 Preencha os valores para ver o cálculo: Valor da Rota - Desconto - Troco - Dinheiro Retido
+                </div>
+                
+                <div style="text-align: center;">
+                    <button class="btn btn-success" onclick="adicionarPedido()">➕ Adicionar Pedido</button>
+                    <button class="btn btn-warning" onclick="gerarExcel()">📊 Gerar Excel</button>
+                    <button class="btn btn-danger" onclick="limparTudo()">🗑️ Limpar Tudo</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>📋 Pedidos Cadastrados</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <select id="filtroMotoboy" onchange="filtrarTabela()">
+                            <option value="">Todos os motoboys</option>
+                        </select>
+                        <select id="filtroRota" onchange="filtrarTabela()">
+                            <option value="">Todas as rotas</option>
+                        </select>
+                        <select id="filtroStatus" onchange="filtrarTabela()">
+                            <option value="">Todos os status</option>
+                            <option value="ok">✅ OK</option>
+                            <option value="pendente">⏳ Pendente</option>
+                        </select>
+                        <input type="date" id="filtroData" onchange="filtrarTabela()">
+                        <input type="text" id="searchPedido" placeholder="🔍 Buscar nº pedido" onkeyup="filtrarTabela()">
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Nome da Rota</th>
+                                <th>Nº Pedido</th>
+                                <th>Status</th>
+                                <th>Motoboy</th>
+                                <th>Dinheiro Recebido</th>
+                                <th>Valor da Rota</th>
+                                <th>Desconto</th>
+                                <th>Troco</th>
+                                <th>Dinheiro Retido</th>
+                                <th>Valor Final</th>
+                                <th>Observações</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaPedidos">
+                            <tr>
+                                <td colspan="13" style="text-align: center; color: #7f8c8d; padding: 40px;">
+                                    Nenhum pedido cadastrado ainda. Use o formulário acima para adicionar.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 2: FECHAMENTO BLING -->
+        <div id="fechamento" class="tab-content">
+            <div class="form-section">
+                <h2>💰 Fechamento no Bling</h2>
+                <p>Controle de recebimentos e formas de pagamento para fechamento no sistema Bling</p>
+                
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="buscaPedidoBling">🔍 Buscar Nº Pedido</label>
+                        <input type="text" id="buscaPedidoBling" placeholder="Digite o número do pedido" onkeyup="buscarPedidoBling()">
+                    </div>
+                    <div class="input-group">
+                        <label for="numeroPedidoBling">Nº Pedido Bling</label>
+                        <input type="text" id="numeroPedidoBling" placeholder="Número do pedido">
+                    </div>
+                    <div class="input-group">
+                        <label for="valorTotalPedido">💰 Valor Total do Pedido</label>
+                        <input type="number" id="valorTotalPedido" step="0.01" placeholder="0.00" onchange="calcularRestante()">
+                    </div>
+                    <div class="input-group">
+                        <label for="statusBling">Status Bling</label>
+                        <select id="statusBling">
+                            <option value="valores-corretos">✅ Valores Corretos</option>
+                            <option value="pendente-correcao">⚠️ Pendente Correção</option>
+                            <option value="fechado">🔒 Fechado</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="temComprovante">📄 Comprovante</label>
+                        <select id="temComprovante">
+                            <option value="sim">✅ Sim</option>
+                            <option value="nao">❌ Não</option>
+                            <option value="parcial">⚠️ Parcial</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="dinheiroRecebidoBling">💵 Dinheiro Recebido</label>
+                        <select id="dinheiroRecebidoBling">
+                            <option value="sim">✅ Sim</option>
+                            <option value="nao">❌ Não</option>
+                            <option value="parcial">⚠️ Parcial</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <label style="font-weight: bold; display: block; margin-bottom: 10px;">💳 Formas de Pagamento:</label>
+                    <div class="pagamento-grid">
+                        <div class="pagamento-item">
+                            <input type="checkbox" id="pagamentoPix" onchange="togglePagamento('pix')">
+                            <label for="pagamentoPix">📱 PIX</label>
+                            <input type="number" id="valorPix" class="valor-pagamento" step="0.01" placeholder="0.00" disabled onchange="calcularRestante()">
+                        </div>
+                        <div class="pagamento-item">
+                            <input type="checkbox" id="pagamentoCartao" onchange="togglePagamento('cartao')">
+                            <label for="pagamentoCartao">💳 Cartão</label>
+                            <input type="number" id="valorCartao" class="valor-pagamento" step="0.01" placeholder="0.00" disabled onchange="calcularRestante()">
+                        </div>
+                        <div class="pagamento-item">
+                            <input type="checkbox" id="pagamentoDinheiro" onchange="togglePagamento('dinheiro')">
+                            <label for="pagamentoDinheiro">💵 Dinheiro</label>
+                            <input type="number" id="valorDinheiro" class="valor-pagamento" step="0.01" placeholder="0.00" disabled onchange="calcularRestante()">
+                        </div>
+                        <div class="pagamento-item">
+                            <input type="checkbox" id="pagamentoBoleto" onchange="togglePagamento('boleto')">
+                            <label for="pagamentoBoleto">📄 Boleto</label>
+                            <input type="number" id="valorBoleto" class="valor-pagamento" step="0.01" placeholder="0.00" disabled onchange="calcularRestante()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="preview" id="previewPagamento">
+                    💡 Total pago: R$ 0,00 | Restante: R$ 0,00
+                </div>
+
+                <div class="input-group full-width">
+                    <label for="observacoesBling">📝 Observações Bling</label>
+                    <textarea id="observacoesBling" placeholder="Observações sobre o fechamento no Bling"></textarea>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-success" onclick="salvarFechamentoBling()">💾 Salvar Fechamento</button>
+                    <button class="btn btn-info" onclick="limparFormularioBling()">🔄 Limpar Formulário</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>💰 Fechamentos Bling</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <select id="filtroBlingStatus" onchange="filtrarTabelaBling()">
+                            <option value="">Todos os status</option>
+                            <option value="valores-corretos">✅ Valores Corretos</option>
+                            <option value="pendente-correcao">⚠️ Pendente Correção</option>
+                            <option value="fechado">🔒 Fechado</option>
+                        </select>
+                        <input type="text" id="searchBling" placeholder="🔍 Buscar pedido" onkeyup="filtrarTabelaBling()">
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nº Pedido</th>
+                                <th>Status</th>
+                                <th>Valor Total</th>
+                                <th>Formas Pagamento</th>
+                                <th>Total Pago</th>
+                                <th>Comprovante</th>
+                                <th>Dinheiro Recebido</th>
+                                <th>Data Registro</th>
+                                <th>Observações</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaFechamentoBling">
+                            <tr>
+                                <td colspan="10" style="text-align: center; color: #7f8c8d; padding: 40px;">
+                                    Nenhum fechamento cadastrado ainda.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 3: GERENCIAR MOTOBOYS -->
+        <div id="motoboys" class="tab-content">
+            <div class="form-section">
+                <h2>👥 Gerenciar Motoboys</h2>
+                <p>Aqui você pode visualizar e editar informações dos motoboys cadastrados.</p>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>📋 Motoboys Cadastrados</h3>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Telefone</th>
+                                <th>Total Pedidos</th>
+                                <th>Pedidos OK</th>
+                                <th>Pedidos Pendentes</th>
+                                <th>Último Pedido</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaMotoboys">
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: #7f8c8d; padding: 40px;">
+                                    Nenhum motoboy cadastrado ainda.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 4: ROTAS AGRUPADAS -->
+        <div id="rotas" class="tab-content">
+            <div class="form-section">
+                <h2>🛣️ Controle de Rotas por Motoboy</h2>
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                    <label>Filtrar por data:</label>
+                    <input type="date" id="filtroDataRota" onchange="atualizarRotas()">
+                    <select id="filtroRotaTipo" onchange="atualizarRotas()">
+                        <option value="">Todas as rotas</option>
+                    </select>
+                    <button class="btn" onclick="copiarResumoRotas()">📋 Copiar Resumo</button>
+                    <button class="btn btn-warning" onclick="enviarWhatsAppRotas()">📱 Enviar WhatsApp</button>
+                </div>
+            </div>
+
+            <div class="rota-cards" id="rotasContainer">
+                <!-- Cards de rotas serão gerados aqui -->
+            </div>
+        </div>
+
+        <!-- ABA 5: RELATÓRIOS -->
+        <div id="relatorio" class="tab-content">
+            <div class="form-section">
+                <h2>📊 Relatórios Detalhados</h2>
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                    <select id="tipoRelatorio" onchange="toggleDateInputs()">
+                        <option value="diario">Relatório Diário</option>
+                        <option value="intervalo">Relatório por Intervalo</option>
+                        <option value="semanal">Relatório Semanal</option>
+                        <option value="mensal">Relatório Mensal</option>
+                        <option value="motoboy">Por Motoboy</option>
+                        <option value="rota">Por Tipo de Rota</option>
+                    </select>
+                    
+                    <div class="date-range" id="dateInputs">
+                        <input type="date" id="dataRelatorio" style="display: block;">
+                        <span id="dateRangeLabel" style="display: none;">até</span>
+                        <input type="date" id="dataRelatorioFim" style="display: none;">
+                    </div>
+                    
+                    <select id="motoboyRelatorio">
+                        <option value="">Todos os motoboys</option>
+                    </select>
+                    <select id="rotaRelatorio">
+                        <option value="">Todas as rotas</option>
+                    </select>
+                    <button class="btn" onclick="gerarRelatorioDetalhado()">📊 Gerar Relatório</button>
+                </div>
+            </div>
+
+            <div id="relatorioContent" class="table-container" style="display: none;">
+                <div class="table-header">
+                    <h3 id="relatorioTitulo">Relatório</h3>
+                    <button class="btn btn-success" onclick="copiarRelatorio()">📋 Copiar Relatório</button>
+                </div>
+                <div id="relatorioTexto" style="padding: 20px; font-family: monospace; white-space: pre-line; background: #f8f9fa;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar pedido -->
+    <div id="modalEditarPedido" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Editar Pedido</h3>
+                <span class="close" onclick="fecharModal('modalEditarPedido')">&times;</span>
+            </div>
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="editData">Data</label>
+                    <input type="date" id="editData">
+                </div>
+                <div class="input-group">
+                    <label for="editNomeRota">Nome da Rota</label>
+                    <select id="editNomeRota" onchange="toggleEditRotaCustom()">
+                        <option value="">Selecione uma rota</option>
+                        <option value="1">Rota 1</option>
+                        <option value="2">Rota 2</option>
+                        <option value="3">Rota 3</option>
+                        <option value="unica">Única</option>
+                        <option value="rota-do-dia">Rota do Dia</option>
+                        <option value="custom">🖊️ Personalizada</option>
+                    </select>
+                </div>
+                <div class="input-group" id="editRotaCustomGroup" style="display: none;">
+                    <label for="editRotaCustom">Rota Personalizada</label>
+                    <input type="text" id="editRotaCustom" placeholder="Digite o nome da rota">
+                </div>
+                <div class="input-group">
+                    <label for="editNumeroPedido">Nº Pedido</label>
+                    <input type="text" id="editNumeroPedido">
+                </div>
+                <div class="input-group">
+                    <label for="editStatusPedido">Status</label>
+                    <select id="editStatusPedido">
+                        <option value="ok">✅ OK</option>
+                        <option value="pendente">⏳ Pendente</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="editMotoboy">Motoboy</label>
+                    <input type="text" id="editMotoboy" readonly>
+                </div>
+                <div class="input-group">
+                    <label for="editTelefone">Telefone</label>
+                    <input type="tel" id="editTelefone">
+                </div>
+                <div class="input-group">
+                    <label for="editDinheiroRecebido">Dinheiro Recebido</label>
+                    <input type="number" id="editDinheiroRecebido" step="0.01" onchange="calcularPreviewEdit()">
+                </div>
+                <div class="input-group">
+                    <label for="editValorRota">Valor da Rota</label>
+                    <input type="number" id="editValorRota" step="0.01" onchange="calcularPreviewEdit()">
+                </div>
+                <div class="input-group">
+                    <label for="editDesconto">Desconto</label>
+                    <input type="number" id="editDesconto" step="0.01" onchange="calcularPreviewEdit()">
+                </div>
+                <div class="input-group">
+                    <label for="editTroco">Troco</label>
+                    <input type="number" id="editTroco" step="0.01" onchange="calcularPreviewEdit()">
+                </div>
+                <div class="input-group">
+                    <label for="editDinheiroRetido">Dinheiro Retido</label>
+                    <input type="number" id="editDinheiroRetido" step="0.01" onchange="calcularPreviewEdit()">
+                </div>
+                <div class="input-group full-width">
+                    <label for="editObservacoes">Observações</label>
+                    <textarea id="editObservacoes"></textarea>
+                </div>
+            </div>
+            
+            <div class="preview" id="previewCalculoEdit">
+                💡 Valor Final será calculado automaticamente
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-success" onclick="salvarEdicaoPedido()">💾 Salvar</button>
+                <button class="btn" onclick="fecharModal('modalEditarPedido')">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar motoboy -->
+    <div id="modalEditarMotoboy" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Editar Motoboy</h3>
+                <span class="close" onclick="fecharModal('modalEditarMotoboy')">&times;</span>
+            </div>
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="editNomeMotoboy">Nome</label>
+                    <input type="text" id="editNomeMotoboy" readonly>
+                </div>
+                <div class="input-group">
+                    <label for="editTelefoneMotoboy">Telefone</label>
+                    <input type="tel" id="editTelefoneMotoboy" placeholder="(11) 99999-9999">
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-success" onclick="salvarEdicaoMotoboy()">💾 Salvar</button>
+                <button class="btn" onclick="fecharModal('modalEditarMotoboy')">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar fechamento Bling -->
+    <div id="modalEditarFechamento" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Editar Fechamento Bling</h3>
+                <span class="close" onclick="fecharModal('modalEditarFechamento')">&times;</span>
+            </div>
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="editNumeroPedidoBling">Nº Pedido</label>
+                    <input type="text" id="editNumeroPedidoBling" readonly>
+                </div>
+                <div class="input-group">
+                    <label for="editValorTotalPedido">Valor Total</label>
+                    <input type="number" id="editValorTotalPedido" step="0.01" onchange="calcularRestanteEdit()">
+                </div>
+                <div class="input-group">
+                    <label for="editStatusBling">Status</label>
+                    <select id="editStatusBling">
+                        <option value="valores-corretos">✅ Valores Corretos</option>
+                        <option value="pendente-correcao">⚠️ Pendente Correção</option>
+                        <option value="fechado">🔒 Fechado</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="editTemComprovante">Comprovante</label>
+                    <select id="editTemComprovante">
+                        <option value="sim">✅ Sim</option>
+                        <option value="nao">❌ Não</option>
+                        <option value="parcial">⚠️ Parcial</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="editDinheiroRecebidoBling">Dinheiro Recebido</label>
+                    <select id="editDinheiroRecebidoBling">
+                        <option value="sim">✅ Sim</option>
+                        <option value="nao">❌ Não</option>
+                        <option value="parcial">⚠️ Parcial</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin: 20px 0;">
+                <label style="font-weight: bold; display: block; margin-bottom: 10px;">💳 Formas de Pagamento:</label>
+                <div class="pagamento-grid">
+                    <div class="pagamento-item">
+                        <input type="checkbox" id="editPagamentoPix" onchange="togglePagamentoEdit('pix')">
+                        <label for="editPagamentoPix">📱 PIX</label>
+                        <input type="number" id="editValorPix" class="valor-pagamento" step="0.01" placeholder="0.00" disabled onchange="calcularRestanteEdit()">
+                    </div>
+                    <div class="pagamento-item">
+                        <input type="checkbox" id="editPagamentoCartao" onchange="togglePagamentoEdit('cartao')">
+                        <label for="editPagamentoCartao">💳 Cartão</label>
+                        <input type="number" id="editValorCartao" class="valor-pagamento" step="0.01" placeholder="0.00" disabled onchange="calcularRestanteEdit()">
+                    </div>
+                    <div class="pagamento-item">
+                        <input type="checkbox" id="editPagamentoDinheiro" onchange="togglePagamentoEdit('dinheiro')">
+                        <label for="editPagamentoDinheiro">💵 Dinheiro</label>
+                        <input type="number" id="editValorDinheiro" class="valor-pagamento" step="0.01" placeholder="0.00" disabled onchange="calcularRestanteEdit()">
+                    </div>
+                    <div class="pagamento-item">
+                        <input type="checkbox" id="editPagamentoBoleto" onchange="togglePagamentoEdit('boleto')">
+                        <label for="editPagamentoBoleto">📄 Boleto</label>
+                        <input type="number" id="editValorBoleto" class="valor-pagamento" step="0.01" placeholder="0.00" disabled onchange="calcularRestanteEdit()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview" id="previewPagamentoEdit">
+                💡 Total pago: R$ 0,00 | Restante: R$ 0,00
+            </div>
+
+            <div class="input-group full-width">
+                <label for="editObservacoesBling">Observações</label>
+                <textarea id="editObservacoesBling"></textarea>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-success" onclick="salvarEdicaoFechamento()">💾 Salvar</button>
+                <button class="btn" onclick="fecharModal('modalEditarFechamento')">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let pedidos = [];
+        let fechamentosBling = [];
+        let motoboysData = {}; // {nome: {telefone: '', ultimoPedido: ''}}
+        let rotasDisponiveis = new Set();
+        let contador = 1;
+        let contadorBling = 1;
+        let pedidoEditando = null;
+        let motoboyEditando = '';
+        let fechamentoEditando = null;
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('data').value = hoje;
+            document.getElementById('filtroDataRota').value = hoje;
+            document.getElementById('dataRelatorio').value = hoje;
+            configurarEventListeners();
+        });
+
+        function configurarEventListeners() {
+            // Calcular automaticamente o valor final
+            ['valorRota', 'desconto', 'troco', 'dinheiroRetido'].forEach(id => {
+                document.getElementById(id).addEventListener('input', calcularPreview);
+            });
+
+            // Auto-preencher telefone
+            document.getElementById('motoboy').addEventListener('change', function() {
+                const motoboyNome = this.value;
+                if (motoboyNome && motoboysData[motoboyNome]) {
+                    document.getElementById('telefone').value = motoboysData[motoboyNome].telefone;
+                    document.getElementById('novoMotoboy').value = '';
+                }
+            });
+
+            // Limpar select ao digitar novo
+            document.getElementById('novoMotoboy').addEventListener('input', function() {
+                if (this.value) {
+                    document.getElementById('motoboy').value = '';
+                    document.getElementById('telefone').value = '';
+                }
+            });
+        }
+
+        function toggleRotaCustom() {
+            const select = document.getElementById('nomeRota');
+            const customGroup = document.getElementById('rotaCustomGroup');
+            const customInput = document.getElementById('rotaCustom');
+            
+            if (select.value === 'custom') {
+                customGroup.style.display = 'block';
+                customInput.required = true;
+            } else {
+                customGroup.style.display = 'none';
+                customInput.required = false;
+                customInput.value = '';
+            }
+        }
+
+        function toggleEditRotaCustom() {
+            const select = document.getElementById('editNomeRota');
+            const customGroup = document.getElementById('editRotaCustomGroup');
+            const customInput = document.getElementById('editRotaCustom');
+            
+            if (select.value === 'custom') {
+                customGroup.style.display = 'block';
+                customInput.required = true;
+            } else {
+                customGroup.style.display = 'none';
+                customInput.required = false;
+                customInput.value = '';
+            }
+        }
+
+        function toggleDateInputs() {
+            const tipo = document.getElementById('tipoRelatorio').value;
+            const dataRelatorio = document.getElementById('dataRelatorio');
+            const dataRelatorioFim = document.getElementById('dataRelatorioFim');
+            const dateRangeLabel = document.getElementById('dateRangeLabel');
+            
+            if (tipo === 'intervalo') {
+                dataRelatorio.style.display = 'block';
+                dataRelatorioFim.style.display = 'block';
+                dateRangeLabel.style.display = 'block';
+            } else {
+                dataRelatorio.style.display = 'block';
+                dataRelatorioFim.style.display = 'none';
+                dateRangeLabel.style.display = 'none';
+            }
+        }
+
+        function calcularPreview() {
+            const valorRota = parseFloat(document.getElementById('valorRota').value) || 0;
+            const desconto = parseFloat(document.getElementById('desconto').value) || 0;
+            const troco = parseFloat(document.getElementById('troco').value) || 0;
+            const dinheiroRetido = parseFloat(document.getElementById('dinheiroRetido').value) || 0;
+            
+            const valorFinal = valorRota - desconto - troco - dinheiroRetido;
+            
+            const preview = document.getElementById('previewCalculo');
+            
+            if (valorFinal > 0) {
+                preview.innerHTML = `💰 <span style="color: #27ae60;">Valor Final: R$ ${valorFinal.toFixed(2)} (Motoboy recebe)</span>`;
+            } else if (valorFinal < 0) {
+                preview.innerHTML = `💸 <span style="color: #e74c3c;">Valor Final: R$ ${Math.abs(valorFinal).toFixed(2)} (Valor negativo)</span>`;
+            } else if (valorRota > 0) {
+                preview.innerHTML = `✅ <span style="color: #3498db;">Valor Final: R$ 0,00 (Contas zeradas)</span>`;
+            } else {
+                preview.innerHTML = `💡 Fórmula: Valor da Rota - Desconto - Troco - Dinheiro Retido`;
+            }
+        }
+
+        function calcularPreviewEdit() {
+            const valorRota = parseFloat(document.getElementById('editValorRota').value) || 0;
+            const desconto = parseFloat(document.getElementById('editDesconto').value) || 0;
+            const troco = parseFloat(document.getElementById('editTroco').value) || 0;
+            const dinheiroRetido = parseFloat(document.getElementById('editDinheiroRetido').value) || 0;
+            
+            const valorFinal = valorRota - desconto - troco - dinheiroRetido;
+            
+            const preview = document.getElementById('previewCalculoEdit');
+            
+            if (valorFinal > 0) {
+                preview.innerHTML = `💰 <span style="color: #27ae60;">Valor Final: R$ ${valorFinal.toFixed(2)} (Motoboy recebe)</span>`;
+            } else if (valorFinal < 0) {
+                preview.innerHTML = `💸 <span style="color: #e74c3c;">Valor Final: R$ ${Math.abs(valorFinal).toFixed(2)} (Valor negativo)</span>`;
+            } else if (valorRota > 0) {
+                preview.innerHTML = `✅ <span style="color: #3498db;">Valor Final: R$ 0,00 (Contas zeradas)</span>`;
+            } else {
+                preview.innerHTML = `💡 Fórmula: Valor da Rota - Desconto - Troco - Dinheiro Retido`;
+            }
+        }
+
+        function obterNomeRota() {
+            const select = document.getElementById('nomeRota');
+            const customInput = document.getElementById('rotaCustom');
+            
+            if (select.value === 'custom') {
+                return customInput.value.trim();
+            } else if (select.value) {
+                const options = {
+                    '1': 'Rota 1',
+                    '2': 'Rota 2', 
+                    '3': 'Rota 3',
+                    'unica': 'Única',
+                    'rota-do-dia': 'Rota do Dia'
+                };
+                return options[select.value] || select.value;
+            }
+            return '';
+        }
+
+        function obterNomeRotaEdit() {
+            const select = document.getElementById('editNomeRota');
+            const customInput = document.getElementById('editRotaCustom');
+            
+            if (select.value === 'custom') {
+                return customInput.value.trim();
+            } else if (select.value) {
+                const options = {
+                    '1': 'Rota 1',
+                    '2': 'Rota 2', 
+                    '3': 'Rota 3',
+                    'unica': 'Única',
+                    'rota-do-dia': 'Rota do Dia'
+                };
+                return options[select.value] || select.value;
+            }
+            return '';
+        }
+
+        function obterCorRota(nomeRota) {
+            const rotaLower = nomeRota.toLowerCase();
+            if (rotaLower.includes('rota 1') || rotaLower === '1') {
+                return 'rota1';
+            } else if (rotaLower.includes('rota 2') || rotaLower === '2') {
+                return 'rota2';
+            } else if (rotaLower.includes('rota 3') || rotaLower === '3') {
+                return 'rota3';
+            } else if (rotaLower.includes('única') || rotaLower.includes('unica')) {
+                return 'unica';
+            } else if (rotaLower.includes('rota do dia')) {
+                return 'rota-do-dia';
+            }
+            return '';
+        }
+
+        // GERENCIAMENTO DE ABAS
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabId === 'rotas') {
+                atualizarRotas();
+            } else if (tabId === 'motoboys') {
+                atualizarTabelaMotoboys();
+            } else if (tabId === 'fechamento') {
+                atualizarTabelaFechamentoBling();
+            }
+        }
+
+        // ADICIONAR PEDIDO
+        function adicionarPedido() {
+            const motoboySelect = document.getElementById('motoboy').value;
+            const novoMotoboy = document.getElementById('novoMotoboy').value.trim();
+            const telefone = document.getElementById('telefone').value.trim();
+            const data = document.getElementById('data').value;
+            const nomeRota = obterNomeRota();
+            const numeroPedido = document.getElementById('numeroPedido').value.trim();
+            const statusPedido = document.getElementById('statusPedido').value;
+            const dinheiroRecebido = parseFloat(document.getElementById('dinheiroRecebido').value) || 0;
+            const valorRota = parseFloat(document.getElementById('valorRota').value) || 0;
+            const desconto = parseFloat(document.getElementById('desconto').value) || 0;
+            const troco = parseFloat(document.getElementById('troco').value) || 0;
+            const dinheiroRetido = parseFloat(document.getElementById('dinheiroRetido').value) || 0;
+            const observacoes = document.getElementById('observacoes').value.trim();
+
+            const motoboyNome = novoMotoboy || motoboySelect;
+
+            if (!motoboyNome || !data || !numeroPedido || !nomeRota) {
+                alert('❌ Preencha pelo menos: Motoboy, Data, Nome da Rota e Nº Pedido!');
+                return;
+            }
+
+            // Verificar se o número do pedido já existe
+            if (pedidos.some(p => p.numeroPedido === numeroPedido)) {
+                alert('❌ Este número de pedido já foi cadastrado!');
+                return;
+            }
+
+            const valorFinal = valorRota - desconto - troco - dinheiroRetido;
+
+            const pedido = {
+                id: contador++,
+                data,
+                nomeRota,
+                numeroPedido,
+                statusPedido,
+                motoboy: motoboyNome,
+                telefone,
+                dinheiroRecebido,
+                valorRota,
+                desconto,
+                troco,
+                dinheiroRetido,
+                valorFinal,
+                observacoes,
+                timestamp: new Date()
+            };
+
+            pedidos.push(pedido);
+            
+            // Atualizar dados do motoboy
+            motoboysData[motoboyNome] = {
+                telefone: telefone,
+                ultimoPedido: data
+            };
+
+            // Adicionar nova rota ao conjunto de rotas disponíveis
+            if (nomeRota) {
+                rotasDisponiveis.add(nomeRota);
+            }
+
+            atualizarTabelaPedidos();
+            atualizarStats();
+            atualizarSelects();
+            limparFormulario();
+
+            alert(`✅ Pedido ${numeroPedido} de ${motoboyNome} na ${nomeRota} adicionado!`);
+        }
+
+        // FECHAMENTO BLING
+        function togglePagamento(tipo) {
+            const checkbox = document.getElementById(`pagamento${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+            const valorInput = document.getElementById(`valor${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+            
+            if (checkbox.checked) {
+                valorInput.disabled = false;
+                valorInput.focus();
+            } else {
+                valorInput.disabled = true;
+                valorInput.value = '';
+            }
+            calcularRestante();
+        }
+
+        function togglePagamentoEdit(tipo) {
+            const checkbox = document.getElementById(`editPagamento${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+            const valorInput = document.getElementById(`editValor${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+            
+            if (checkbox.checked) {
+                valorInput.disabled = false;
+                valorInput.focus();
+            } else {
+                valorInput.disabled = true;
+                valorInput.value = '';
+            }
+            calcularRestanteEdit();
+        }
+
+        function calcularRestante() {
+            const valorTotal = parseFloat(document.getElementById('valorTotalPedido').value) || 0;
+            const valorPix = parseFloat(document.getElementById('valorPix').value) || 0;
+            const valorCartao = parseFloat(document.getElementById('valorCartao').value) || 0;
+            const valorDinheiro = parseFloat(document.getElementById('valorDinheiro').value) || 0;
+            const valorBoleto = parseFloat(document.getElementById('valorBoleto').value) || 0;
+            
+            const totalPago = valorPix + valorCartao + valorDinheiro + valorBoleto;
+            const restante = valorTotal - totalPago;
+            
+            const preview = document.getElementById('previewPagamento');
+            
+            if (restante === 0 && valorTotal > 0) {
+                preview.innerHTML = `✅ <span style="color: #27ae60;">Total pago: R$ ${totalPago.toFixed(2)} | ✅ Pagamento completo!</span>`;
+            } else if (restante > 0) {
+                preview.innerHTML = `💡 Total pago: R$ ${totalPago.toFixed(2)} | <span style="color: #e74c3c;">Restante: R$ ${restante.toFixed(2)}</span>`;
+            } else if (restante < 0) {
+                preview.innerHTML = `⚠️ Total pago: R$ ${totalPago.toFixed(2)} | <span style="color: #f39c12;">Excesso: R$ ${Math.abs(restante).toFixed(2)}</span>`;
+            } else {
+                preview.innerHTML = `💡 Total pago: R$ ${totalPago.toFixed(2)} | Restante: R$ 0,00`;
+            }
+        }
+
+        function calcularRestanteEdit() {
+            const valorTotal = parseFloat(document.getElementById('editValorTotalPedido').value) || 0;
+            const valorPix = parseFloat(document.getElementById('editValorPix').value) || 0;
+            const valorCartao = parseFloat(document.getElementById('editValorCartao').value) || 0;
+            const valorDinheiro = parseFloat(document.getElementById('editValorDinheiro').value) || 0;
+            const valorBoleto = parseFloat(document.getElementById('editValorBoleto').value) || 0;
+            
+            const totalPago = valorPix + valorCartao + valorDinheiro + valorBoleto;
+            const restante = valorTotal - totalPago;
+            
+            const preview = document.getElementById('previewPagamentoEdit');
+            
+            if (restante === 0 && valorTotal > 0) {
+                preview.innerHTML = `✅ <span style="color: #27ae60;">Total pago: R$ ${totalPago.toFixed(2)} | ✅ Pagamento completo!</span>`;
+            } else if (restante > 0) {
+                preview.innerHTML = `💡 Total pago: R$ ${totalPago.toFixed(2)} | <span style="color: #e74c3c;">Restante: R$ ${restante.toFixed(2)}</span>`;
+            } else if (restante < 0) {
+                preview.innerHTML = `⚠️ Total pago: R$ ${totalPago.toFixed(2)} | <span style="color: #f39c12;">Excesso: R$ ${Math.abs(restante).toFixed(2)}</span>`;
+            } else {
+                preview.innerHTML = `💡 Total pago: R$ ${totalPago.toFixed(2)} | Restante: R$ 0,00`;
+            }
+        }
+
+        function buscarPedidoBling() {
+            const numeroBusca = document.getElementById('buscaPedidoBling').value.trim();
+            if (!numeroBusca) return;
+
+            const pedidoEncontrado = pedidos.find(p => p.numeroPedido.toLowerCase().includes(numeroBusca.toLowerCase()));
+            
+            if (pedidoEncontrado) {
+                document.getElementById('numeroPedidoBling').value = pedidoEncontrado.numeroPedido;
+                // Auto-sugerir valor total baseado no valor da rota
+                if (!document.getElementById('valorTotalPedido').value) {
+                    document.getElementById('valorTotalPedido').value = pedidoEncontrado.valorRota.toFixed(2);
+                }
+                calcularRestante();
+                
+                // Destacar o pedido na busca
+                const searchElement = document.getElementById('buscaPedidoBling');
+                searchElement.style.borderColor = '#27ae60';
+                searchElement.style.backgroundColor = '#d5f4e6';
+                
+                setTimeout(() => {
+                    searchElement.style.borderColor = '#e1e8ed';
+                    searchElement.style.backgroundColor = 'white';
+                }, 2000);
+            } else {
+                alert('❌ Pedido não encontrado na prestação de contas dos motoboys!');
+            }
+        }
+
+        function salvarFechamentoBling() {
+            const numeroPedido = document.getElementById('numeroPedidoBling').value.trim();
+            const valorTotal = parseFloat(document.getElementById('valorTotalPedido').value) || 0;
+            const statusBling = document.getElementById('statusBling').value;
+            const temComprovante = document.getElementById('temComprovante').value;
+            const dinheiroRecebido = document.getElementById('dinheiroRecebidoBling').value;
+            const observacoes = document.getElementById('observacoesBling').value.trim();
+
+            if (!numeroPedido || valorTotal === 0) {
+                alert('❌ Preencha pelo menos o número do pedido e o valor total!');
+                return;
+            }
+
+            // Verificar se já existe fechamento para este pedido
+            if (fechamentosBling.some(f => f.numeroPedido === numeroPedido)) {
+                alert('❌ Já existe um fechamento para este pedido!');
+                return;
+            }
+
+            // Coletar formas de pagamento
+            const formasPagamento = [];
+            let totalPago = 0;
+
+            if (document.getElementById('pagamentoPix').checked) {
+                const valor = parseFloat(document.getElementById('valorPix').value) || 0;
+                formasPagamento.push({tipo: 'PIX', valor: valor});
+                totalPago += valor;
+            }
+            if (document.getElementById('pagamentoCartao').checked) {
+                const valor = parseFloat(document.getElementById('valorCartao').value) || 0;
+                formasPagamento.push({tipo: 'Cartão', valor: valor});
+                totalPago += valor;
+            }
+            if (document.getElementById('pagamentoDinheiro').checked) {
+                const valor = parseFloat(document.getElementById('valorDinheiro').value) || 0;
+                formasPagamento.push({tipo: 'Dinheiro', valor: valor});
+                totalPago += valor;
+            }
+            if (document.getElementById('pagamentoBoleto').checked) {
+                const valor = parseFloat(document.getElementById('valorBoleto').value) || 0;
+                formasPagamento.push({tipo: 'Boleto', valor: valor});
+                totalPago += valor;
+            }
+
+            const fechamento = {
+                id: contadorBling++,
+                numeroPedido,
+                valorTotal,
+                statusBling,
+                temComprovante,
+                dinheiroRecebido,
+                formasPagamento,
+                totalPago,
+                observacoes,
+                dataRegistro: new Date().toISOString().split('T')[0],
+                timestamp: new Date()
+            };
+
+            fechamentosBling.push(fechamento);
+            atualizarTabelaFechamentoBling();
+            limparFormularioBling();
+            
+            alert(`✅ Fechamento do pedido ${numeroPedido} salvo com sucesso!`);
+        }
+
+        function limparFormularioBling() {
+            document.getElementById('buscaPedidoBling').value = '';
+            document.getElementById('numeroPedidoBling').value = '';
+            document.getElementById('valorTotalPedido').value = '';
+            document.getElementById('statusBling').value = 'valores-corretos';
+            document.getElementById('temComprovante').value = 'sim';
+            document.getElementById('dinheiroRecebidoBling').value = 'sim';
+            document.getElementById('observacoesBling').value = '';
+            
+            // Limpar formas de pagamento
+            ['pagamentoPix', 'pagamentoCartao', 'pagamentoDinheiro', 'pagamentoBoleto'].forEach(id => {
+                document.getElementById(id).checked = false;
+            });
+            ['valorPix', 'valorCartao', 'valorDinheiro', 'valorBoleto'].forEach(id => {
+                const input = document.getElementById(id);
+                input.value = '';
+                input.disabled = true;
+            });
+            
+            document.getElementById('previewPagamento').innerHTML = '💡 Total pago: R$ 0,00 | Restante: R$ 0,00';
+        }
+
+        function atualizarTabelaFechamentoBling() {
+            const tbody = document.getElementById('tabelaFechamentoBling');
+            tbody.innerHTML = '';
+
+            const fechamentosFiltrados = filtrarFechamentosBling();
+
+            if (fechamentosFiltrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align: center; color: #7f8c8d; padding: 40px;">
+                            Nenhum fechamento encontrado.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            fechamentosFiltrados.slice().reverse().forEach(fechamento => {
+                const tr = document.createElement('tr');
+                
+                const statusColor = fechamento.statusBling === 'valores-corretos' ? '#27ae60' : 
+                                  fechamento.statusBling === 'pendente-correcao' ? '#f39c12' : '#e74c3c';
+
+                const formasPagamentoTexto = fechamento.formasPagamento.map(fp => 
+                    `${fp.tipo}: R$ ${fp.valor.toFixed(2)}`
+                ).join(', ') || '-';
+
+                const comprovanteIcon = fechamento.temComprovante === 'sim' ? '✅' : 
+                                      fechamento.temComprovante === 'parcial' ? '⚠️' : '❌';
+                
+                const dinheiroIcon = fechamento.dinheiroRecebido === 'sim' ? '✅' : 
+                                   fechamento.dinheiroRecebido === 'parcial' ? '⚠️' : '❌';
+
+                tr.innerHTML = `
+                    <td><strong>${fechamento.numeroPedido}</strong></td>
+                    <td><span class="status-badge" style="background: ${statusColor};">${getStatusText(fechamento.statusBling)}</span></td>
+                    <td>R$ ${fechamento.valorTotal.toFixed(2)}</td>
+                    <td title="${formasPagamentoTexto}" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        ${formasPagamentoTexto}
+                    </td>
+                    <td><strong>R$ ${fechamento.totalPago.toFixed(2)}</strong></td>
+                    <td>${comprovanteIcon}</td>
+                    <td>${dinheiroIcon}</td>
+                    <td>${formatarData(fechamento.dataRegistro)}</td>
+                    <td title="${fechamento.observacoes}" style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        ${fechamento.observacoes || '-'}
+                    </td>
+                    <td>
+                        <button class="btn btn-info btn-small" onclick="editarFechamentoBling(${fechamento.id})" title="Editar">
+                            ✏️
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="removerFechamentoBling(${fechamento.id})" title="Remover">
+                            🗑️
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'valores-corretos': '✅ Corretos',
+                'pendente-correcao': '⚠️ Pendente',
+                'fechado': '🔒 Fechado'
+            };
+            return statusMap[status] || status;
+        }
+
+        function filtrarFechamentosBling() {
+            const statusFiltro = document.getElementById('filtroBlingStatus').value;
+            const searchTerm = document.getElementById('searchBling').value.toLowerCase();
+            
+            return fechamentosBling.filter(fechamento => {
+                const statusMatch = !statusFiltro || fechamento.statusBling === statusFiltro;
+                const searchMatch = !searchTerm || fechamento.numeroPedido.toLowerCase().includes(searchTerm);
+                return statusMatch && searchMatch;
+            });
+        }
+
+        function filtrarTabelaBling() {
+            atualizarTabelaFechamentoBling();
+        }
+
+        function editarFechamentoBling(id) {
+            const fechamento = fechamentosBling.find(f => f.id === id);
+            if (!fechamento) return;
+
+            fechamentoEditando = fechamento;
+
+            // Preencher modal de edição
+            document.getElementById('editNumeroPedidoBling').value = fechamento.numeroPedido;
+            document.getElementById('editValorTotalPedido').value = fechamento.valorTotal;
+            document.getElementById('editStatusBling').value = fechamento.statusBling;
+            document.getElementById('editTemComprovante').value = fechamento.temComprovante;
+            document.getElementById('editDinheiroRecebidoBling').value = fechamento.dinheiroRecebido;
+            document.getElementById('editObservacoesBling').value = fechamento.observacoes;
+
+            // Limpar formas de pagamento
+            ['editPagamentoPix', 'editPagamentoCartao', 'editPagamentoDinheiro', 'editPagamentoBoleto'].forEach(id => {
+                document.getElementById(id).checked = false;
+            });
+            ['editValorPix', 'editValorCartao', 'editValorDinheiro', 'editValorBoleto'].forEach(id => {
+                const input = document.getElementById(id);
+                input.value = '';
+                input.disabled = true;
+            });
+
+            // Preencher formas de pagamento
+            fechamento.formasPagamento.forEach(fp => {
+                const tipo = fp.tipo.toLowerCase();
+                const checkboxId = `editPagamento${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`;
+                const valorId = `editValor${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`;
+                
+                if (tipo === 'cartão') {
+                    document.getElementById('editPagamentoCartao').checked = true;
+                    document.getElementById('editValorCartao').disabled = false;
+                    document.getElementById('editValorCartao').value = fp.valor;
+                } else if (document.getElementById(checkboxId)) {
+                    document.getElementById(checkboxId).checked = true;
+                    document.getElementById(valorId).disabled = false;
+                    document.getElementById(valorId).value = fp.valor;
+                }
+            });
+
+            calcularRestanteEdit();
+            document.getElementById('modalEditarFechamento').style.display = 'block';
+        }
+
+        function salvarEdicaoFechamento() {
+            if (!fechamentoEditando) return;
+
+            const valorTotal = parseFloat(document.getElementById('editValorTotalPedido').value) || 0;
+            const statusBling = document.getElementById('editStatusBling').value;
+            const temComprovante = document.getElementById('editTemComprovante').value;
+            const dinheiroRecebido = document.getElementById('editDinheiroRecebidoBling').value;
+            const observacoes = document.getElementById('editObservacoesBling').value.trim();
+
+            // Coletar formas de pagamento
+            const formasPagamento = [];
+            let totalPago = 0;
+
+            if (document.getElementById('editPagamentoPix').checked) {
+                const valor = parseFloat(document.getElementById('editValorPix').value) || 0;
+                formasPagamento.push({tipo: 'PIX', valor: valor});
+                totalPago += valor;
+            }
+            if (document.getElementById('editPagamentoCartao').checked) {
+                const valor = parseFloat(document.getElementById('editValorCartao').value) || 0;
+                formasPagamento.push({tipo: 'Cartão', valor: valor});
+                totalPago += valor;
+            }
+            if (document.getElementById('editPagamentoDinheiro').checked) {
+                const valor = parseFloat(document.getElementById('editValorDinheiro').value) || 0;
+                formasPagamento.push({tipo: 'Dinheiro', valor: valor});
+                totalPago += valor;
+            }
+            if (document.getElementById('editPagamentoBoleto').checked) {
+                const valor = parseFloat(document.getElementById('editValorBoleto').value) || 0;
+                formasPagamento.push({tipo: 'Boleto', valor: valor});
+                totalPago += valor;
+            }
+
+            // Atualizar fechamento
+            fechamentoEditando.valorTotal = valorTotal;
+            fechamentoEditando.statusBling = statusBling;
+            fechamentoEditando.temComprovante = temComprovante;
+            fechamentoEditando.dinheiroRecebido = dinheiroRecebido;
+            fechamentoEditando.formasPagamento = formasPagamento;
+            fechamentoEditando.totalPago = totalPago;
+            fechamentoEditando.observacoes = observacoes;
+
+            atualizarTabelaFechamentoBling();
+            fecharModal('modalEditarFechamento');
+            
+            alert(`✅ Fechamento do pedido ${fechamentoEditando.numeroPedido} atualizado com sucesso!`);
+        }
+
+        function removerFechamentoBling(id) {
+            if (confirm('Tem certeza que deseja remover este fechamento?')) {
+                fechamentosBling = fechamentosBling.filter(f => f.id !== id);
+                atualizarTabelaFechamentoBling();
+                alert('✅ Fechamento removido com sucesso!');
+            }
+        }
+
+        function atualizarTabelaPedidos() {
+            const tbody = document.getElementById('tabelaPedidos');
+            tbody.innerHTML = '';
+
+            const pedidosFiltrados = filtrarPedidos();
+
+            if (pedidosFiltrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="13" style="text-align: center; color: #7f8c8d; padding: 40px;">
+                            Nenhum pedido encontrado para os filtros aplicados.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            pedidosFiltrados.slice().reverse().forEach(pedido => {
+                const tr = document.createElement('tr');
+                
+                const valorFinalColor = pedido.valorFinal > 0 ? '#27ae60' : 
+                                      pedido.valorFinal < 0 ? '#e74c3c' : '#3498db';
+
+                const corRota = obterCorRota(pedido.nomeRota);
+                const statusBadge = pedido.statusPedido === 'ok' ? 
+                    '<span class="status-badge status-ok">✅ OK</span>' : 
+                    '<span class="status-badge status-pendente">⏳ Pendente</span>';
+
+                // Destacar número do pedido se corresponder à busca
+                const searchTerm = document.getElementById('searchPedido').value.toLowerCase();
+                let numeroPedidoDisplay = pedido.numeroPedido;
+                if (searchTerm && pedido.numeroPedido.toLowerCase().includes(searchTerm)) {
+                    numeroPedidoDisplay = `<span class="search-highlight">${pedido.numeroPedido}</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td>${formatarData(pedido.data)}</td>
+                    <td>
+                        <strong>${pedido.nomeRota}</strong>
+                        ${corRota ? `<span class="rota-badge ${corRota}"></span>` : ''}
+                    </td>
+                    <td><strong>${numeroPedidoDisplay}</strong></td>
+                    <td>${statusBadge}</td>
+                    <td><strong>${pedido.motoboy}</strong></td>
+                    <td>R$ ${pedido.dinheiroRecebido.toFixed(2)}</td>
+                    <td>R$ ${pedido.valorRota.toFixed(2)}</td>
+                    <td>R$ ${pedido.desconto.toFixed(2)}</td>
+                    <td>R$ ${pedido.troco.toFixed(2)}</td>
+                    <td>R$ ${pedido.dinheiroRetido.toFixed(2)}</td>
+                    <td><strong style="color: ${valorFinalColor}">R$ ${pedido.valorFinal.toFixed(2)}</strong></td>
+                    <td title="${pedido.observacoes}" style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        ${pedido.observacoes || '-'}
+                    </td>
+                    <td>
+                        <button class="btn btn-info btn-small" onclick="editarPedido(${pedido.id})" title="Editar">
+                            ✏️
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="removerPedido(${pedido.id})" title="Remover">
+                            🗑️
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+
+        function atualizarTabelaMotoboys() {
+            const tbody = document.getElementById('tabelaMotoboys');
+            tbody.innerHTML = '';
+
+            const motoboysNomes = Object.keys(motoboysData);
+
+            if (motoboysNomes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #7f8c8d; padding: 40px;">
+                            Nenhum motoboy cadastrado ainda.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            motoboysNomes.forEach(nome => {
+                const dadosMotoboy = motoboysData[nome];
+                const pedidosMotoboy = pedidos.filter(p => p.motoboy === nome);
+                const totalPedidos = pedidosMotoboy.length;
+                const pedidosOk = pedidosMotoboy.filter(p => p.statusPedido === 'ok').length;
+                const pedidosPendentes = pedidosMotoboy.filter(p => p.statusPedido === 'pendente').length;
+                const ultimoPedido = dadosMotoboy.ultimoPedido;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${nome}</strong></td>
+                    <td>${dadosMotoboy.telefone || '-'}</td>
+                    <td>${totalPedidos}</td>
+                    <td><span style="color: #27ae60;">${pedidosOk}</span></td>
+                    <td><span style="color: #e74c3c;">${pedidosPendentes}</span></td>
+                    <td>${ultimoPedido ? formatarData(ultimoPedido) : '-'}</td>
+                    <td>
+                        <button class="btn btn-info btn-small" onclick="abrirModalEditarMotoboy('${nome}')" title="Editar">
+                            ✏️ Editar
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filtrarPedidos() {
+            const motoboyFiltro = document.getElementById('filtroMotoboy').value;
+            const rotaFiltro = document.getElementById('filtroRota').value;
+            const statusFiltro = document.getElementById('filtroStatus').value;
+            const dataFiltro = document.getElementById('filtroData').value;
+            const searchTerm = document.getElementById('searchPedido').value.toLowerCase();
+            
+            return pedidos.filter(pedido => {
+                const motoboyMatch = !motoboyFiltro || pedido.motoboy === motoboyFiltro;
+                const rotaMatch = !rotaFiltro || pedido.nomeRota === rotaFiltro;
+                const statusMatch = !statusFiltro || pedido.statusPedido === statusFiltro;
+                const dataMatch = !dataFiltro || pedido.data === dataFiltro;
+                const searchMatch = !searchTerm || pedido.numeroPedido.toLowerCase().includes(searchTerm);
+                return motoboyMatch && rotaMatch && statusMatch && dataMatch && searchMatch;
+            });
+        }
+
+        function filtrarTabela() {
+            atualizarTabelaPedidos();
+        }
+
+        function atualizarStats() {
+            const hoje = new Date().toISOString().split('T')[0];
+            const pedidosHoje = pedidos.filter(p => p.data === hoje);
+            const pedidosPendentesCount = pedidos.filter(p => p.statusPedido === 'pendente').length;
+            
+            document.getElementById('totalPedidos').textContent = pedidos.length;
+            document.getElementById('totalPedidosHoje').textContent = pedidosHoje.length;
+            document.getElementById('totalValorRota').textContent = `R$ ${pedidos.reduce((sum, p) => sum + p.valorRota, 0).toFixed(2)}`;
+            document.getElementById('totalValorFinal').textContent = `R$ ${pedidos.filter(p => p.valorFinal > 0).reduce((sum, p) => sum + p.valorFinal, 0).toFixed(2)}`;
+            document.getElementById('pedidosPendentes').textContent = pedidosPendentesCount;
+        }
+
+        function atualizarSelects() {
+            const motoboysNomes = Object.keys(motoboysData);
+            const rotasArray = Array.from(rotasDisponiveis);
+            
+            // Select de motoboys no formulário
+            const selectMotoboy = document.getElementById('motoboy');
+            selectMotoboy.innerHTML = '<option value="">Selecione ou cadastre novo</option>' + 
+                motoboysNomes.map(nome => `<option value="${nome}">${nome}</option>`).join('');
+
+            // Select de filtro na tabela
+            const filtroMotoboy = document.getElementById('filtroMotoboy');
+            filtroMotoboy.innerHTML = '<option value="">Todos os motoboys</option>' + 
+                motoboysNomes.map(nome => `<option value="${nome}">${nome}</option>`).join('');
+
+            const filtroRota = document.getElementById('filtroRota');
+            filtroRota.innerHTML = '<option value="">Todas as rotas</option>' + 
+                rotasArray.map(rota => `<option value="${rota}">${rota}</option>`).join('');
+
+            // Select de filtro nas rotas
+            const filtroRotaTipo = document.getElementById('filtroRotaTipo');
+            filtroRotaTipo.innerHTML = '<option value="">Todas as rotas</option>' + 
+                rotasArray.map(rota => `<option value="${rota}">${rota}</option>`).join('');
+
+            // Select de relatório
+            const motoboyRelatorio = document.getElementById('motoboyRelatorio');
+            motoboyRelatorio.innerHTML = '<option value="">Todos os motoboys</option>' + 
+                motoboysNomes.map(nome => `<option value="${nome}">${nome}</option>`).join('');
+
+            const rotaRelatorio = document.getElementById('rotaRelatorio');
+            rotaRelatorio.innerHTML = '<option value="">Todas as rotas</option>' + 
+                rotasArray.map(rota => `<option value="${rota}">${rota}</option>`).join('');
+        }
+
+        // EDIÇÃO DE PEDIDOS
+        function editarPedido(id) {
+            const pedido = pedidos.find(p => p.id === id);
+            if (!pedido) return;
+
+            pedidoEditando = pedido;
+
+            // Preencher modal de edição
+            document.getElementById('editData').value = pedido.data;
+            document.getElementById('editNumeroPedido').value = pedido.numeroPedido;
+            document.getElementById('editStatusPedido').value = pedido.statusPedido;
+            document.getElementById('editMotoboy').value = pedido.motoboy;
+            document.getElementById('editTelefone').value = pedido.telefone;
+            document.getElementById('editDinheiroRecebido').value = pedido.dinheiroRecebido;
+            document.getElementById('editValorRota').value = pedido.valorRota;
+            document.getElementById('editDesconto').value = pedido.desconto;
+            document.getElementById('editTroco').value = pedido.troco;
+            document.getElementById('editDinheiroRetido').value = pedido.dinheiroRetido;
+            document.getElementById('editObservacoes').value = pedido.observacoes;
+
+            // Configurar rota
+            const rotaSelect = document.getElementById('editNomeRota');
+            const rotaCustomGroup = document.getElementById('editRotaCustomGroup');
+            const rotaCustomInput = document.getElementById('editRotaCustom');
+
+            // Verificar se é uma rota padrão
+            const rotasMap = {
+                'Rota 1': '1',
+                'Rota 2': '2',
+                'Rota 3': '3',
+                'Única': 'unica',
+                'Rota do Dia': 'rota-do-dia'
+            };
+
+            if (rotasMap[pedido.nomeRota]) {
+                rotaSelect.value = rotasMap[pedido.nomeRota];
+                rotaCustomGroup.style.display = 'none';
+            } else {
+                rotaSelect.value = 'custom';
+                rotaCustomGroup.style.display = 'block';
+                rotaCustomInput.value = pedido.nomeRota;
+            }
+
+            calcularPreviewEdit();
+            document.getElementById('modalEditarPedido').style.display = 'block';
+        }
+
+        function salvarEdicaoPedido() {
+            if (!pedidoEditando) return;
+
+            const data = document.getElementById('editData').value;
+            const nomeRota = obterNomeRotaEdit();
+            const numeroPedido = document.getElementById('editNumeroPedido').value.trim();
+            const statusPedido = document.getElementById('editStatusPedido').value;
+            const telefone = document.getElementById('editTelefone').value.trim();
+            const dinheiroRecebido = parseFloat(document.getElementById('editDinheiroRecebido').value) || 0;
+            const valorRota = parseFloat(document.getElementById('editValorRota').value) || 0;
+            const desconto = parseFloat(document.getElementById('editDesconto').value) || 0;
+            const troco = parseFloat(document.getElementById('editTroco').value) || 0;
+            const dinheiroRetido = parseFloat(document.getElementById('editDinheiroRetido').value) || 0;
+            const observacoes = document.getElementById('editObservacoes').value.trim();
+
+            if (!data || !numeroPedido || !nomeRota) {
+                alert('❌ Preencha pelo menos: Data, Nome da Rota e Nº Pedido!');
+                return;
+            }
+
+            // Verificar se o número do pedido já existe (exceto o atual)
+            if (pedidos.some(p => p.numeroPedido === numeroPedido && p.id !== pedidoEditando.id)) {
+                alert('❌ Este número de pedido já foi cadastrado!');
+                return;
+            }
+
+            const valorFinal = valorRota - desconto - troco - dinheiroRetido;
+
+            // Atualizar pedido
+            pedidoEditando.data = data;
+            pedidoEditando.nomeRota = nomeRota;
+            pedidoEditando.numeroPedido = numeroPedido;
+            pedidoEditando.statusPedido = statusPedido;
+            pedidoEditando.telefone = telefone;
+            pedidoEditando.dinheiroRecebido = dinheiroRecebido;
+            pedidoEditando.valorRota = valorRota;
+            pedidoEditando.desconto = desconto;
+            pedidoEditando.troco = troco;
+            pedidoEditando.dinheiroRetido = dinheiroRetido;
+            pedidoEditando.valorFinal = valorFinal;
+            pedidoEditando.observacoes = observacoes;
+
+            // Atualizar dados do motoboy
+            if (motoboysData[pedidoEditando.motoboy]) {
+                motoboysData[pedidoEditando.motoboy].telefone = telefone;
+            }
+
+            // Adicionar nova rota ao conjunto de rotas disponíveis
+            if (nomeRota) {
+                rotasDisponiveis.add(nomeRota);
+            }
+
+            atualizarTabelaPedidos();
+            atualizarStats();
+            atualizarSelects();
+            fecharModal('modalEditarPedido');
+            
+            alert(`✅ Pedido ${numeroPedido} atualizado com sucesso!`);
+        }
+
+        // MODAL EDITAR MOTOBOY
+        function abrirModalEditarMotoboy(nome) {
+            motoboyEditando = nome;
+            document.getElementById('editNomeMotoboy').value = nome;
+            document.getElementById('editTelefoneMotoboy').value = motoboysData[nome].telefone || '';
+            document.getElementById('modalEditarMotoboy').style.display = 'block';
+        }
+
+        function salvarEdicaoMotoboy() {
+            const novoTelefone = document.getElementById('editTelefoneMotoboy').value.trim();
+            
+            if (!novoTelefone) {
+                alert('❌ Informe o telefone do motoboy!');
+                return;
+            }
+
+            // Atualizar dados do motoboy
+            motoboysData[motoboyEditando].telefone = novoTelefone;
+            
+            // Atualizar telefone em todos os pedidos deste motoboy
+            pedidos.forEach(pedido => {
+                if (pedido.motoboy === motoboyEditando) {
+                    pedido.telefone = novoTelefone;
+                }
+            });
+
+            atualizarTabelaMotoboys();
+            atualizarTabelaPedidos();
+            fecharModal('modalEditarMotoboy');
+            
+            alert(`✅ Telefone de ${motoboyEditando} atualizado com sucesso!`);
+        }
+
+        // FECHAR MODAIS
+        function fecharModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            if (modalId === 'modalEditarPedido') {
+                pedidoEditando = null;
+            } else if (modalId === 'modalEditarMotoboy') {
+                motoboyEditando = '';
+            } else if (modalId === 'modalEditarFechamento') {
+                fechamentoEditando = null;
+            }
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modais = ['modalEditarPedido', 'modalEditarMotoboy', 'modalEditarFechamento'];
+            modais.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (event.target === modal) {
+                    fecharModal(modalId);
+                }
+            });
+        }
+
+        function removerPedido(id) {
+            if (confirm('Tem certeza que deseja remover este pedido?')) {
+                pedidos = pedidos.filter(p => p.id !== id);
+                atualizarTabelaPedidos();
+                atualizarStats();
+                
+                // Atualizar dados dos motoboys
+                const motoboysComPedidos = [...new Set(pedidos.map(p => p.motoboy))];
+                const motoboysParaRemover = Object.keys(motoboysData).filter(nome => !motoboysComPedidos.includes(nome));
+                
+                motoboysParaRemover.forEach(nome => {
+                    delete motoboysData[nome];
+                });
+                
+                // Atualizar última data dos motoboys restantes
+                motoboysComPedidos.forEach(nome => {
+                    const pedidosMotoboy = pedidos.filter(p => p.motoboy === nome);
+                    if (pedidosMotoboy.length > 0) {
+                        const ultimaData = pedidosMotoboy.sort((a, b) => new Date(b.data) - new Date(a.data))[0].data;
+                        motoboysData[nome].ultimoPedido = ultimaData;
+                    }
+                });
+
+                // Atualizar rotas disponíveis
+                rotasDisponiveis.clear();
+                pedidos.forEach(p => rotasDisponiveis.add(p.nomeRota));
+
+                atualizarSelects();
+                alert('✅ Pedido removido com sucesso!');
+            }
+        }
+
+        function limparFormulario() {
+            ['motoboy', 'novoMotoboy', 'telefone', 'numeroPedido', 'dinheiroRecebido', 'valorRota', 'desconto', 'troco', 'dinheiroRetido', 'observacoes'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('nomeRota').value = '';
+            document.getElementById('statusPedido').value = 'ok';
+            document.getElementById('data').value = new Date().toISOString().split('T')[0];
+            document.getElementById('rotaCustomGroup').style.display = 'none';
+            document.getElementById('rotaCustom').value = '';
+            document.getElementById('previewCalculo').innerHTML = '💡 Fórmula: Valor da Rota - Desconto - Troco - Dinheiro Retido';
+        }
+
+        function limparTudo() {
+            if (confirm('⚠️ Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita!')) {
+                pedidos = [];
+                fechamentosBling = [];
+                motoboysData = {};
+                rotasDisponiveis.clear();
+                contador = 1;
+                contadorBling = 1;
+                atualizarTabelaPedidos();
+                atualizarTabelaMotoboys();
+                atualizarTabelaFechamentoBling();
+                atualizarStats();
+                atualizarSelects();
+                limparFormulario();
+                alert('✅ Todos os dados foram removidos!');
+            }
+        }
+
+        // ROTAS AGRUPADAS
+        function atualizarRotas() {
+            const dataFiltro = document.getElementById('filtroDataRota').value;
+            const rotaTipoFiltro = document.getElementById('filtroRotaTipo').value;
+            const container = document.getElementById('rotasContainer');
+            container.innerHTML = '';
+
+            let pedidosDoDia = pedidos.filter(p => p.data === dataFiltro);
+            if (rotaTipoFiltro) {
+                pedidosDoDia = pedidosDoDia.filter(p => p.nomeRota === rotaTipoFiltro);
+            }
+
+            // Agrupar por motoboy e tipo de rota
+            const gruposRota = {};
+            pedidosDoDia.forEach(pedido => {
+                const chave = `${pedido.motoboy}_${pedido.nomeRota}`;
+                if (!gruposRota[chave]) {
+                    gruposRota[chave] = {
+                        motoboy: pedido.motoboy,
+                        nomeRota: pedido.nomeRota,
+                        telefone: pedido.telefone,
+                        pedidos: []
+                    };
+                }
+                gruposRota[chave].pedidos.push(pedido);
+            });
+
+            const grupos = Object.values(gruposRota);
+
+            if (grupos.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #7f8c8d; padding: 40px;">Nenhuma rota encontrada para esta data e filtros.</div>';
+                return;
+            }
+
+            grupos.forEach(grupo => {
+                const totalPedidos = grupo.pedidos.length;
+                const pedidosOk = grupo.pedidos.filter(p => p.statusPedido === 'ok').length;
+                const pedidosPendentes = grupo.pedidos.filter(p => p.statusPedido === 'pendente').length;
+                const totalDinheiroRecebido = grupo.pedidos.reduce((sum, p) => sum + p.dinheiroRecebido, 0);
+                const totalValorRota = grupo.pedidos.reduce((sum, p) => sum + p.valorRota, 0);
+                const totalDescontos = grupo.pedidos.reduce((sum, p) => sum + p.desconto, 0);
+                const totalTrocos = grupo.pedidos.reduce((sum, p) => sum + p.troco, 0);
+                const totalRetido = grupo.pedidos.reduce((sum, p) => sum + p.dinheiroRetido, 0);
+                const totalValorFinal = grupo.pedidos.reduce((sum, p) => sum + p.valorFinal, 0);
+                
+                const statusColor = totalValorFinal > 0 ? '#27ae60' : 
+                                  totalValorFinal < 0 ? '#e74c3c' : '#3498db';
+                const statusText = totalValorFinal > 0 ? 'RECEBER' : 
+                                 totalValorFinal < 0 ? 'NEGATIVO' : 'ZERADO';
+
+                const corRota = obterCorRota(grupo.nomeRota);
+
+                const card = document.createElement('div');
+                card.className = 'rota-card';
+                card.innerHTML = `
+                    <div class="rota-header">
+                        <div class="rota-name">
+                            👤 ${grupo.motoboy}
+                            <span class="rota-badge ${corRota}">${grupo.nomeRota}</span>
+                        </div>
+                        <div style="background: ${statusColor}; color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.8em; font-weight: bold;">
+                            ${statusText}
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 0.9em; color: #7f8c8d; margin-bottom: 15px;">
+                        📅 ${formatarData(dataFiltro)} | 📞 ${grupo.telefone} | 📦 ${totalPedidos} pedidos
+                        <br>✅ ${pedidosOk} OK | ⏳ ${pedidosPendentes} Pendentes
+                    </div>
+                    
+                    <div class="rota-totals">
+                        <div class="total-row">
+                            <span>💵 Total Dinheiro Recebido:</span>
+                            <span>R$ ${totalDinheiroRecebido.toFixed(2)}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>💰 Total Valor das Rotas:</span>
+                            <span>R$ ${totalValorRota.toFixed(2)}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>💳 (-) Total Descontos:</span>
+                            <span>R$ ${totalDescontos.toFixed(2)}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>🔄 (-) Total Trocos:</span>
+                            <span>R$ ${totalTrocos.toFixed(2)}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>🏪 (-) Total Retido:</span>
+                            <span>R$ ${totalRetido.toFixed(2)}</span>
+                        </div>
+                        <div class="total-row final">
+                            <span>${totalValorFinal > 0 ? 'VALOR FINAL A RECEBER:' : totalValorFinal < 0 ? 'VALOR NEGATIVO:' : 'SITUAÇÃO:'}</span>
+                            <span style="color: ${statusColor}">
+                                R$ ${Math.abs(totalValorFinal).toFixed(2)}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="pedidos-list">
+                        <div style="font-weight: bold; margin-bottom: 10px; color: #2c3e50;">📋 Pedidos da Rota:</div>
+                        ${grupo.pedidos.map(p => `
+                            <div class="pedido-item">
+                                <span>
+                                    <strong>${p.numeroPedido}</strong> 
+                                    ${p.statusPedido === 'ok' ? '✅' : '⏳'}
+                                    ${p.observacoes ? '📝' : ''}
+                                </span>
+                                <span>R$ ${p.valorFinal.toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn btn-success" onclick="copiarCardRota('${grupo.motoboy}', '${grupo.nomeRota}', '${dataFiltro}')" style="flex: 1;">
+                            📋 Copiar Card
+                        </button>
+                        <button class="btn btn-warning" onclick="enviarWhatsAppRota('${grupo.telefone}', '${grupo.motoboy}', '${grupo.nomeRota}', '${dataFiltro}')" style="flex: 1;">
+                            📱 WhatsApp
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function copiarCardRota(motoboyNome, nomeRota, data) {
+            const pedidosDaRota = pedidos.filter(p => p.data === data && p.motoboy === motoboyNome && p.nomeRota === nomeRota);
+            const telefone = pedidosDaRota[0]?.telefone || '';
+            
+            const totalPedidos = pedidosDaRota.length;
+            const pedidosOk = pedidosDaRota.filter(p => p.statusPedido === 'ok').length;
+            const pedidosPendentes = pedidosDaRota.filter(p => p.statusPedido === 'pendente').length;
+            const totalDinheiroRecebido = pedidosDaRota.reduce((sum, p) => sum + p.dinheiroRecebido, 0);
+            const totalValorRota = pedidosDaRota.reduce((sum, p) => sum + p.valorRota, 0);
+            const totalDescontos = pedidosDaRota.reduce((sum, p) => sum + p.desconto, 0);
+            const totalTrocos = pedidosDaRota.reduce((sum, p) => sum + p.troco, 0);
+            const totalRetido = pedidosDaRota.reduce((sum, p) => sum + p.dinheiroRetido, 0);
+            const totalValorFinal = pedidosDaRota.reduce((sum, p) => sum + p.valorFinal, 0);
+
+            const texto = `🏍️ *PRESTAÇÃO DE CONTAS DIÁRIA*
+📅 Data: ${formatarData(data)}
+👤 Motoboy: *${motoboyNome}*
+🛣️ Rota: *${nomeRota}*
+📞 Telefone: ${telefone}
+
+📊 *RESUMO DA ROTA:*
+📦 Total de Pedidos: ${totalPedidos}
+✅ Pedidos OK: ${pedidosOk}
+⏳ Pedidos Pendentes: ${pedidosPendentes}
+💵 Dinheiro Recebido: R$ ${totalDinheiroRecebido.toFixed(2)}
+💰 Valor das Rotas: R$ ${totalValorRota.toFixed(2)}
+
+💸 *DESCONTOS:*
+💳 Descontos: R$ ${totalDescontos.toFixed(2)}
+🔄 Trocos: R$ ${totalTrocos.toFixed(2)}
+🏪 Dinheiro Retido: R$ ${totalRetido.toFixed(2)}
+
+${totalValorFinal > 0 ? `💵 *VALOR FINAL A RECEBER: R$ ${totalValorFinal.toFixed(2)}*` : 
+  totalValorFinal < 0 ? `🔴 *VALOR NEGATIVO: R$ ${Math.abs(totalValorFinal).toFixed(2)}*` : 
+  `✅ *CONTAS ZERADAS*`}
+
+📋 *PEDIDOS DA ROTA:*
+${pedidosDaRota.map(p => `• ${p.numeroPedido}: R$ ${p.valorFinal.toFixed(2)} ${p.statusPedido === 'ok' ? '✅' : '⏳'}${p.observacoes ? ` (${p.observacoes})` : ''}`).join('\n')}
+
+_Calçados 24h - Sistema de Gestão - ${new Date().toLocaleDateString('pt-BR')}_`;
+
+            navigator.clipboard.writeText(texto).then(() => {
+                alert(`Card de ${motoboyNome} - ${nomeRota} copiado para a área de transferência!`);
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = texto;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert(`Card de ${motoboyNome} - ${nomeRota} copiado para a área de transferência!`);
+            });
+        }
+
+        function enviarWhatsAppRota(telefone, motoboyNome, nomeRota, data) {
+            const pedidosDaRota = pedidos.filter(p => p.data === data && p.motoboy === motoboyNome && p.nomeRota === nomeRota);
+            
+            const totalPedidos = pedidosDaRota.length;
+            const pedidosOk = pedidosDaRota.filter(p => p.statusPedido === 'ok').length;
+            const pedidosPendentes = pedidosDaRota.filter(p => p.statusPedido === 'pendente').length;
+            const totalDinheiroRecebido = pedidosDaRota.reduce((sum, p) => sum + p.dinheiroRecebido, 0);
+            const totalValorRota = pedidosDaRota.reduce((sum, p) => sum + p.valorRota, 0);
+            const totalDescontos = pedidosDaRota.reduce((sum, p) => sum + p.desconto, 0);
+            const totalTrocos = pedidosDaRota.reduce((sum, p) => sum + p.troco, 0);
+            const totalRetido = pedidosDaRota.reduce((sum, p) => sum + p.dinheiroRetido, 0);
+            const totalValorFinal = pedidosDaRota.reduce((sum, p) => sum + p.valorFinal, 0);
+
+            const texto = `🏍️ *PRESTAÇÃO DE CONTAS DIÁRIA*
+📅 Data: ${formatarData(data)}
+👤 Motoboy: *${motoboyNome}*
+🛣️ Rota: *${nomeRota}*
+
+📊 *RESUMO DA ROTA:*
+📦 Total de Pedidos: ${totalPedidos}
+✅ Pedidos OK: ${pedidosOk}
+⏳ Pedidos Pendentes: ${pedidosPendentes}
+💵 Dinheiro Recebido: R$ ${totalDinheiroRecebido.toFixed(2)}
+💰 Valor das Rotas: R$ ${totalValorRota.toFixed(2)}
+
+💸 *DESCONTOS:*
+💳 Descontos: R$ ${totalDescontos.toFixed(2)}
+🔄 Trocos: R$ ${totalTrocos.toFixed(2)}
+🏪 Dinheiro Retido: R$ ${totalRetido.toFixed(2)}
+
+${totalValorFinal > 0 ? `💵 *VALOR FINAL A RECEBER: R$ ${totalValorFinal.toFixed(2)}*` : 
+  totalValorFinal < 0 ? `🔴 *VALOR NEGATIVO: R$ ${Math.abs(totalValorFinal).toFixed(2)}*` : 
+  `✅ *CONTAS ZERADAS*`}
+
+📋 *PEDIDOS DA ROTA:*
+${pedidosDaRota.map(p => `• ${p.numeroPedido}: R$ ${p.valorFinal.toFixed(2)} ${p.statusPedido === 'ok' ? '✅' : '⏳'}${p.observacoes ? ` (${p.observacoes})` : ''}`).join('\n')}
+
+_Calçados 24h - Controle de Prestação de Contas_`;
+
+            const numeroLimpo = telefone.replace(/\D/g, '');
+            const url = `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(texto)}`;
+            window.open(url, '_blank');
+        }
+
+        function copiarResumoRotas() {
+            const dataFiltro = document.getElementById('filtroDataRota').value;
+            const rotaTipoFiltro = document.getElementById('filtroRotaTipo').value;
+            
+            let pedidosDoDia = pedidos.filter(p => p.data === dataFiltro);
+            if (rotaTipoFiltro) {
+                pedidosDoDia = pedidosDoDia.filter(p => p.nomeRota === rotaTipoFiltro);
+            }
+
+            // Agrupar por motoboy e tipo de rota
+            const gruposRota = {};
+            pedidosDoDia.forEach(pedido => {
+                const chave = `${pedido.motoboy}_${pedido.nomeRota}`;
+                if (!gruposRota[chave]) {
+                    gruposRota[chave] = {
+                        motoboy: pedido.motoboy,
+                        nomeRota: pedido.nomeRota,
+                        pedidos: []
+                    };
+                }
+                gruposRota[chave].pedidos.push(pedido);
+            });
+
+            const grupos = Object.values(gruposRota);
+            
+            if (grupos.length === 0) {
+                alert('Nenhuma rota encontrada para esta data e filtros.');
+                return;
+            }
+            
+            let textoCompleto = `📋 *RESUMO GERAL DAS ROTAS - ${formatarData(dataFiltro)}*
+_Calçados 24h_
+${rotaTipoFiltro ? `Filtro: ${rotaTipoFiltro}` : ''}
+
+`;
+            
+            grupos.forEach(grupo => {
+                const totalPedidos = grupo.pedidos.length;
+                const pedidosOk = grupo.pedidos.filter(p => p.statusPedido === 'ok').length;
+                const pedidosPendentes = grupo.pedidos.filter(p => p.statusPedido === 'pendente').length;
+                const totalValorFinal = grupo.pedidos.reduce((sum, p) => sum + p.valorFinal, 0);
+                
+                textoCompleto += `👤 *${grupo.motoboy}* - 🛣️ ${grupo.nomeRota}
+📦 Pedidos: ${totalPedidos} (✅ ${pedidosOk} OK | ⏳ ${pedidosPendentes} Pendentes)
+💵 ${totalValorFinal > 0 ? 'Valor Final a Receber' : totalValorFinal < 0 ? 'Valor Negativo' : 'Zerado'}: R$ ${Math.abs(totalValorFinal).toFixed(2)}
+
+`;
+            });
+            
+            navigator.clipboard.writeText(textoCompleto).then(() => {
+                alert('Resumo de todas as rotas copiado!');
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = textoCompleto;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Resumo de todas as rotas copiado!');
+            });
+        }
+
+        function enviarWhatsAppRotas() {
+            alert('Esta funcionalidade enviaria o resumo para todos os motoboys via WhatsApp. Implementação específica conforme necessidade.');
+        }
+
+        // RELATÓRIOS DETALHADOS
+        function gerarRelatorioDetalhado() {
+            const tipo = document.getElementById('tipoRelatorio').value;
+            const dataInicio = document.getElementById('dataRelatorio').value;
+            const dataFim = document.getElementById('dataRelatorioFim').value;
+            const motoboyFiltro = document.getElementById('motoboyRelatorio').value;
+            const rotaFiltro = document.getElementById('rotaRelatorio').value;
+            
+            let pedidosFiltrados = [];
+            let titulo = '';
+            
+            if (tipo === 'diario') {
+                pedidosFiltrados = pedidos.filter(p => p.data === dataInicio);
+                titulo = `RELATÓRIO DIÁRIO - ${formatarData(dataInicio)}`;
+            } else if (tipo === 'intervalo') {
+                if (!dataInicio || !dataFim) {
+                    alert('❌ Selecione as datas de início e fim para o relatório por intervalo!');
+                    return;
+                }
+                pedidosFiltrados = pedidos.filter(p => {
+                    return p.data >= dataInicio && p.data <= dataFim;
+                });
+                titulo = `RELATÓRIO POR INTERVALO - ${formatarData(dataInicio)} a ${formatarData(dataFim)}`;
+            } else if (tipo === 'semanal') {
+                const dataObj = new Date(dataInicio);
+                const inicioSemana = new Date(dataObj);
+                inicioSemana.setDate(dataObj.getDate() - dataObj.getDay());
+                const fimSemana = new Date(inicioSemana);
+                fimSemana.setDate(inicioSemana.getDate() + 6);
+                
+                pedidosFiltrados = pedidos.filter(p => {
+                    const pedidoData = new Date(p.data);
+                    return pedidoData >= inicioSemana && pedidoData <= fimSemana;
+                });
+                titulo = `RELATÓRIO SEMANAL - ${formatarData(inicioSemana.toISOString().split('T')[0])} a ${formatarData(fimSemana.toISOString().split('T')[0])}`;
+            } else if (tipo === 'mensal') {
+                const dataObj = new Date(dataInicio);
+                const ano = dataObj.getFullYear();
+                const mes = dataObj.getMonth();
+                
+                pedidosFiltrados = pedidos.filter(p => {
+                    const pedidoData = new Date(p.data);
+                    return pedidoData.getFullYear() === ano && pedidoData.getMonth() === mes;
+                });
+                titulo = `RELATÓRIO MENSAL - ${mes + 1}/${ano}`;
+            } else if (tipo === 'motoboy') {
+                if (!motoboyFiltro) {
+                    alert('Selecione um motoboy para o relatório individual!');
+                    return;
+                }
+                pedidosFiltrados = pedidos.filter(p => p.motoboy === motoboyFiltro);
+                titulo = `RELATÓRIO POR MOTOBOY - ${motoboyFiltro}`;
+            } else if (tipo === 'rota') {
+                if (!rotaFiltro) {
+                    alert('Selecione um tipo de rota para o relatório!');
+                    return;
+                }
+                pedidosFiltrados = pedidos.filter(p => p.nomeRota === rotaFiltro);
+                titulo = `RELATÓRIO POR TIPO DE ROTA - ${rotaFiltro}`;
+            }
+            
+            if (motoboyFiltro && tipo !== 'motoboy') {
+                pedidosFiltrados = pedidosFiltrados.filter(p => p.motoboy === motoboyFiltro);
+                titulo += ` - ${motoboyFiltro}`;
+            }
+
+            if (rotaFiltro && tipo !== 'rota') {
+                pedidosFiltrados = pedidosFiltrados.filter(p => p.nomeRota === rotaFiltro);
+                titulo += ` - ${rotaFiltro}`;
+            }
+            
+            gerarTextoRelatorio(pedidosFiltrados, titulo);
+        }
+
+        function gerarTextoRelatorio(pedidosFiltrados, titulo) {
+            if (pedidosFiltrados.length === 0) {
+                alert('Nenhum pedido encontrado para os filtros selecionados!');
+                return;
+            }
+
+            let relatorio = `${titulo}
+Calçados 24h - Controle de Prestação de Contas - Motoboys
+Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}
+
+`;
+            
+            // Resumo geral
+            const totalPedidos = pedidosFiltrados.length;
+            const pedidosOk = pedidosFiltrados.filter(p => p.statusPedido === 'ok').length;
+            const pedidosPendentes = pedidosFiltrados.filter(p => p.statusPedido === 'pendente').length;
+            const totalDinheiroRecebido = pedidosFiltrados.reduce((sum, p) => sum + p.dinheiroRecebido, 0);
+            const totalValorRota = pedidosFiltrados.reduce((sum, p) => sum + p.valorRota, 0);
+            const totalDescontos = pedidosFiltrados.reduce((sum, p) => sum + p.desconto, 0);
+            const totalTrocos = pedidosFiltrados.reduce((sum, p) => sum + p.troco, 0);
+            const totalRetido = pedidosFiltrados.reduce((sum, p) => sum + p.dinheiroRetido, 0);
+            const totalValorFinal = pedidosFiltrados.reduce((sum, p) => sum + p.valorFinal, 0);
+            
+            relatorio += `📊 RESUMO GERAL:
+Total de Pedidos: ${totalPedidos}
+Pedidos OK: ${pedidosOk}
+Pedidos Pendentes: ${pedidosPendentes}
+Total Dinheiro Recebido: R$ ${totalDinheiroRecebido.toFixed(2)}
+Total Valor das Rotas: R$ ${totalValorRota.toFixed(2)}
+Total Descontos: R$ ${totalDescontos.toFixed(2)}
+Total Trocos: R$ ${totalTrocos.toFixed(2)}
+Total Dinheiro Retido: R$ ${totalRetido.toFixed(2)}
+Total Valor Final: R$ ${totalValorFinal.toFixed(2)}
+
+`;
+
+            // Agrupamento por motoboy, rota e data
+            const gruposCompletos = {};
+            pedidosFiltrados.forEach(pedido => {
+                const chave = `${pedido.motoboy}_${pedido.nomeRota}_${pedido.data}`;
+                if (!gruposCompletos[chave]) {
+                    gruposCompletos[chave] = {
+                        motoboy: pedido.motoboy,
+                        nomeRota: pedido.nomeRota,
+                        data: pedido.data,
+                        telefone: pedido.telefone,
+                        pedidos: []
+                    };
+                }
+                gruposCompletos[chave].pedidos.push(pedido);
+            });
+
+            relatorio += `👥 DETALHAMENTO POR MOTOBOY, ROTA E DATA:
+
+`;
+
+            Object.values(gruposCompletos).forEach(grupo => {
+                const totalPedidosGrupo = grupo.pedidos.length;
+                const pedidosOkGrupo = grupo.pedidos.filter(p => p.statusPedido === 'ok').length;
+                const pedidosPendentesGrupo = grupo.pedidos.filter(p => p.statusPedido === 'pendente').length;
+                const totalDinheiroRecebidoGrupo = grupo.pedidos.reduce((sum, p) => sum + p.dinheiroRecebido, 0);
+                const totalValorRotaGrupo = grupo.pedidos.reduce((sum, p) => sum + p.valorRota, 0);
+                const totalDescontosGrupo = grupo.pedidos.reduce((sum, p) => sum + p.desconto, 0);
+                const totalTrocosGrupo = grupo.pedidos.reduce((sum, p) => sum + p.troco, 0);
+                const totalRetidoGrupo = grupo.pedidos.reduce((sum, p) => sum + p.dinheiroRetido, 0);
+                const totalValorFinalGrupo = grupo.pedidos.reduce((sum, p) => sum + p.valorFinal, 0);
+
+                relatorio += `🏍️ ${grupo.motoboy} - 🛣️ ${grupo.nomeRota} - ${formatarData(grupo.data)}
+📞 Telefone: ${grupo.telefone}
+📦 Pedidos: ${totalPedidosGrupo} (✅ ${pedidosOkGrupo} OK | ⏳ ${pedidosPendentesGrupo} Pendentes)
+💵 Dinheiro Recebido: R$ ${totalDinheiroRecebidoGrupo.toFixed(2)}
+💰 Valor das Rotas: R$ ${totalValorRotaGrupo.toFixed(2)}
+💳 Descontos: R$ ${totalDescontosGrupo.toFixed(2)}
+🔄 Trocos: R$ ${totalTrocosGrupo.toFixed(2)}
+🏪 Dinheiro Retido: R$ ${totalRetidoGrupo.toFixed(2)}
+💸 Valor Final: R$ ${totalValorFinalGrupo.toFixed(2)}
+
+📋 PEDIDOS INDIVIDUAIS:
+${grupo.pedidos.map(p => `  • ${p.numeroPedido}: ${p.statusPedido === 'ok' ? '✅' : '⏳'} | Din.Rec. R$ ${p.dinheiroRecebido.toFixed(2)} | Val.Rota R$ ${p.valorRota.toFixed(2)} | Final R$ ${p.valorFinal.toFixed(2)}${p.observacoes ? ` | Obs: ${p.observacoes}` : ''}`).join('\n')}
+
+`;
+            });
+            
+            document.getElementById('relatorioTitulo').textContent = titulo;
+            document.getElementById('relatorioTexto').textContent = relatorio;
+            document.getElementById('relatorioContent').style.display = 'block';
+        }
+
+        function copiarRelatorio() {
+            const conteudo = document.getElementById('relatorioTexto').textContent;
+            navigator.clipboard.writeText(conteudo).then(() => {
+                alert('Relatório copiado para a área de transferência!');
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = conteudo;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Relatório copiado para a área de transferência!');
+            });
+        }
+
+        // EXPORTAR EXCEL
+        function gerarExcel() {
+            if (pedidos.length === 0 && fechamentosBling.length === 0) {
+                alert('❌ Não há dados para exportar!');
+                return;
+            }
+
+            // Preparar dados para Excel - Planilha de Pedidos Individuais
+            const dadosPedidos = pedidos.map(pedido => ({
+                'Data': formatarData(pedido.data),
+                'Nome da Rota': pedido.nomeRota,
+                'Nº Pedido': pedido.numeroPedido,
+                'Status': pedido.statusPedido === 'ok' ? 'OK' : 'Pendente',
+                'Motoboy': pedido.motoboy,
+                'Telefone': pedido.telefone,
+                'Dinheiro Recebido (R$)': pedido.dinheiroRecebido.toFixed(2),
+                'Valor da Rota (R$)': pedido.valorRota.toFixed(2),
+                'Desconto (R$)': pedido.desconto.toFixed(2),
+                'Troco (R$)': pedido.troco.toFixed(2),
+                'Dinheiro Retido (R$)': pedido.dinheiroRetido.toFixed(2),
+                'Valor Final (R$)': pedido.valorFinal.toFixed(2),
+                'Observações': pedido.observacoes || ''
+            }));
+
+            // Preparar dados para Excel - Fechamentos Bling
+            const dadosFechamentos = fechamentosBling.map(fechamento => ({
+                'Nº Pedido': fechamento.numeroPedido,
+                'Status Bling': getStatusText(fechamento.statusBling),
+                'Valor Total (R$)': fechamento.valorTotal.toFixed(2),
+                'Formas Pagamento': fechamento.formasPagamento.map(fp => `${fp.tipo}: R$ ${fp.valor.toFixed(2)}`).join('; '),
+                'Total Pago (R$)': fechamento.totalPago.toFixed(2),
+                'Comprovante': fechamento.temComprovante === 'sim' ? 'Sim' : fechamento.temComprovante === 'parcial' ? 'Parcial' : 'Não',
+                'Dinheiro Recebido': fechamento.dinheiroRecebido === 'sim' ? 'Sim' : fechamento.dinheiroRecebido === 'parcial' ? 'Parcial' : 'Não',
+                'Data Registro': formatarData(fechamento.dataRegistro),
+                'Observações': fechamento.observacoes || ''
+            }));
+
+            // Preparar dados para Excel - Resumo por Rota/Data
+            const resumoRotas = [];
+            const gruposCompletos = {};
+            
+            pedidos.forEach(pedido => {
+                const chave = `${pedido.motoboy}_${pedido.nomeRota}_${pedido.data}`;
+                if (!gruposCompletos[chave]) {
+                    gruposCompletos[chave] = {
+                        motoboy: pedido.motoboy,
+                        nomeRota: pedido.nomeRota,
+                        data: pedido.data,
+                        telefone: pedido.telefone,
+                        pedidos: []
+                    };
+                }
+                gruposCompletos[chave].pedidos.push(pedido);
+            });
+
+            Object.values(gruposCompletos).forEach(grupo => {
+                const totalPedidos = grupo.pedidos.length;
+                const pedidosOk = grupo.pedidos.filter(p => p.statusPedido === 'ok').length;
+                const pedidosPendentes = grupo.pedidos.filter(p => p.statusPedido === 'pendente').length;
+                const totalDinheiroRecebido = grupo.pedidos.reduce((sum, p) => sum + p.dinheiroRecebido, 0);
+                const totalValorRota = grupo.pedidos.reduce((sum, p) => sum + p.valorRota, 0);
+                const totalDescontos = grupo.pedidos.reduce((sum, p) => sum + p.desconto, 0);
+                const totalTrocos = grupo.pedidos.reduce((sum, p) => sum + p.troco, 0);
+                const totalRetido = grupo.pedidos.reduce((sum, p) => sum + p.dinheiroRetido, 0);
+                const totalValorFinal = grupo.pedidos.reduce((sum, p) => sum + p.valorFinal, 0);
+                
+                resumoRotas.push({
+                    'Data': formatarData(grupo.data),
+                    'Motoboy': grupo.motoboy,
+                    'Nome da Rota': grupo.nomeRota,
+                    'Telefone': grupo.telefone,
+                    'Qtd Pedidos': totalPedidos,
+                    'Pedidos OK': pedidosOk,
+                    'Pedidos Pendentes': pedidosPendentes,
+                    'Total Dinheiro Recebido (R$)': totalDinheiroRecebido.toFixed(2),
+                    'Total Valor Rotas (R$)': totalValorRota.toFixed(2),
+                    'Total Descontos (R$)': totalDescontos.toFixed(2),
+                    'Total Trocos (R$)': totalTrocos.toFixed(2),
+                    'Total Retido (R$)': totalRetido.toFixed(2),
+                    'Total Valor Final (R$)': totalValorFinal.toFixed(2),
+                    'Lista Pedidos': grupo.pedidos.map(p => p.numeroPedido).join(', '),
+                    'Observações Gerais': grupo.pedidos.filter(p => p.observacoes).map(p => `${p.numeroPedido}: ${p.observacoes}`).join('; ')
+                });
+            });
+
+            // Preparar dados para Excel - Planilha de Motoboys
+            const dadosMotoboys = Object.keys(motoboysData).map(nome => {
+                const dados = motoboysData[nome];
+                const pedidosMotoboy = pedidos.filter(p => p.motoboy === nome);
+                const totalPedidos = pedidosMotoboy.length;
+                const pedidosOk = pedidosMotoboy.filter(p => p.statusPedido === 'ok').length;
+                const pedidosPendentes = pedidosMotoboy.filter(p => p.statusPedido === 'pendente').length;
+                const totalValorFinal = pedidosMotoboy.reduce((sum, p) => sum + p.valorFinal, 0);
+                
+                return {
+                    'Nome': nome,
+                    'Telefone': dados.telefone || '',
+                    'Total Pedidos': totalPedidos,
+                    'Pedidos OK': pedidosOk,
+                    'Pedidos Pendentes': pedidosPendentes,
+                    'Último Pedido': dados.ultimoPedido ? formatarData(dados.ultimoPedido) : '',
+                    'Total Valor Final (R$)': totalValorFinal.toFixed(2)
+                };
+            });
+
+            // Preparar dados para Excel - Resumo por Tipo de Rota
+            const resumoPorTipoRota = [];
+            const rotasEstatisticas = {};
+            
+            pedidos.forEach(pedido => {
+                if (!rotasEstatisticas[pedido.nomeRota]) {
+                    rotasEstatisticas[pedido.nomeRota] = {
+                        totalPedidos: 0,
+                        pedidosOk: 0,
+                        pedidosPendentes: 0,
+                        totalValorRota: 0,
+                        totalValorFinal: 0,
+                        motoboys: new Set()
+                    };
+                }
+                rotasEstatisticas[pedido.nomeRota].totalPedidos++;
+                if (pedido.statusPedido === 'ok') rotasEstatisticas[pedido.nomeRota].pedidosOk++;
+                if (pedido.statusPedido === 'pendente') rotasEstatisticas[pedido.nomeRota].pedidosPendentes++;
+                rotasEstatisticas[pedido.nomeRota].totalValorRota += pedido.valorRota;
+                rotasEstatisticas[pedido.nomeRota].totalValorFinal += pedido.valorFinal;
+                rotasEstatisticas[pedido.nomeRota].motoboys.add(pedido.motoboy);
+            });
+
+            Object.keys(rotasEstatisticas).forEach(nomeRota => {
+                const stats = rotasEstatisticas[nomeRota];
+                resumoPorTipoRota.push({
+                    'Nome da Rota': nomeRota,
+                    'Total Pedidos': stats.totalPedidos,
+                    'Pedidos OK': stats.pedidosOk,
+                    'Pedidos Pendentes': stats.pedidosPendentes,
+                    'Total Motoboys': stats.motoboys.size,
+                    'Total Valor Rotas (R$)': stats.totalValorRota.toFixed(2),
+                    'Total Valor Final (R$)': stats.totalValorFinal.toFixed(2),
+                    'Média por Pedido (R$)': (stats.totalValorRota / stats.totalPedidos).toFixed(2)
+                });
+            });
+
+            // Criar workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Planilha 1: Pedidos Individuais
+            if (dadosPedidos.length > 0) {
+                const ws1 = XLSX.utils.json_to_sheet(dadosPedidos);
+                XLSX.utils.book_append_sheet(wb, ws1, "Pedidos Individuais");
+            }
+            
+            // Planilha 2: Fechamentos Bling
+            if (dadosFechamentos.length > 0) {
+                const ws2 = XLSX.utils.json_to_sheet(dadosFechamentos);
+                XLSX.utils.book_append_sheet(wb, ws2, "Fechamentos Bling");
+            }
+            
+            // Planilha 3: Resumo por Rotas
+            if (resumoRotas.length > 0) {
+                const ws3 = XLSX.utils.json_to_sheet(resumoRotas);
+                XLSX.utils.book_append_sheet(wb, ws3, "Resumo por Rotas");
+            }
+
+            // Planilha 4: Dados dos Motoboys
+            if (dadosMotoboys.length > 0) {
+                const ws4 = XLSX.utils.json_to_sheet(dadosMotoboys);
+                XLSX.utils.book_append_sheet(wb, ws4, "Motoboys");
+            }
+
+            // Planilha 5: Estatísticas por Tipo de Rota
+            if (resumoPorTipoRota.length > 0) {
+                const ws5 = XLSX.utils.json_to_sheet(resumoPorTipoRota);
+                XLSX.utils.book_append_sheet(wb, ws5, "Estatísticas por Rota");
+            }
+
+            // Salvar arquivo
+            const nomeArquivo = `Calcados24h_Sistema_Completo_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, nomeArquivo);
+            
+            const totalAbas = [dadosPedidos, dadosFechamentos, resumoRotas, dadosMotoboys, resumoPorTipoRota].filter(arr => arr.length > 0).length;
+            
+            alert(`✅ Planilha Excel gerada com sucesso!\nArquivo: ${nomeArquivo}\n\n📊 Contém ${totalAbas} abas:\n${dadosPedidos.length > 0 ? `• Pedidos Individuais (${dadosPedidos.length} pedidos)\n` : ''}${dadosFechamentos.length > 0 ? `• Fechamentos Bling (${dadosFechamentos.length} fechamentos)\n` : ''}${resumoRotas.length > 0 ? `• Resumo por Rotas (${resumoRotas.length} grupos)\n` : ''}${dadosMotoboys.length > 0 ? `• Motoboys (${dadosMotoboys.length} motoboys)\n` : ''}${resumoPorTipoRota.length > 0 ? `• Estatísticas por Rota (${resumoPorTipoRota.length} tipos)` : ''}`);
+        }
+
+        // UTILITÁRIOS
+        function formatarData(data) {
+            return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+        }
+    </script>
+
+    <!-- Sistema de Autenticação -->
+    <script>
+        const acesso = localStorage.getItem("autenticado");
+        if (acesso !== "sim") {
+            const senha = prompt("Digite a senha para acessar:");
+            if (senha === "Admin.2580") {
+                localStorage.setItem("autenticado", "sim");
+            } else {
+                alert("Senha incorreta. Redirecionando...");
+                window.location.href = "about:blank";
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("autenticado");
+            location.reload();
+        }
+    </script>
+
+    <!-- Botão de Logout -->
+    <div style="position: fixed; top: 10px; right: 10px; z-index: 999;">
+        <button onclick="logout()" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+            🚪 Sair
+        </button>
+    </div>
+</body>
+</html>
